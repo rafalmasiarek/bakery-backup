@@ -473,7 +473,7 @@ if [ "$files_backup" -eq 1 ]; then
                 if [ -n "$dir" ]; then
                     mkdir "$files_backup_dir/$name"
                     if [ -d "$files_backup_dir/$name" ]; then
-                        if [ "$ftp_enabled" -eq 1 ]; then
+                        if [ "$ftp_enabled" -eq 1 ] && [ -z "$onlylocal" ]; then
                             if [ "$FTP_ERROR" == "false" ]; then
                                 "$LFTP" -u $ftp_user,$ftp_password -e "set ftp:ssl-allow off; set ftp:use-size false;mkdir /$ftp_remote_dir/$run_date/files/$name;quit" "$ftp_server"
                                 if [ "$?" -ne 0 ]; then
@@ -504,7 +504,7 @@ if [ "$files_backup" -eq 1 ]; then
                                 log "INFO" "Warning: some files were changed while creating archive $directory_name.tar.gz"
                             fi
                             log "OK" "Backup of directory $directory created successfully."
-                            if [ "$ftp_enabled" -eq 1 ] && [ "$FTP_ERROR" == "false" ] && [ -v "$onlylocal" ] ; then
+                            if [ "$ftp_enabled" -eq 1 ] && [ "$FTP_ERROR" == "false" ] && [ -z "$onlylocal" ] ; then
                                 "$LFTP" -u $ftp_user,$ftp_password -e "set ftp:ssl-allow off; set ftp:use-size false;cd /$ftp_remote_dir/$run_date/files/$name;put $files_backup_dir/$name/$directory_name.tar.gz;quit" "$ftp_server"
                                 if [ $? -ne 0 ]; then
                                     log "ERROR" "Failed to send file $files_backup_dir/$name/$directory_name.tar.gz to ftp server"'!'
@@ -513,7 +513,7 @@ if [ "$files_backup" -eq 1 ]; then
                                     log "OK" "Backup file $files_backup_dir/$name/$directory_name.tar.gz successfully sent to ftp server."
                                 fi
                             fi
-                            if [ "$s3_enabled" -eq 1 ] && [ -v "$onlylocal" ]; then
+                            if [ "$s3_enabled" -eq 1 ] && [ -z "$onlylocal" ]; then
                                 "$S3CMD" put "$files_backup_dir/$name/$directory_name.tar.gz" "$s3_path/$run_date/files/"
                                 if [ "$?" -eq 0 ]; then
                                     log "OK" "File $name.tar.gz sent to S3 successfully."
@@ -532,11 +532,11 @@ if [ "$files_backup" -eq 1 ]; then
                                 fi
                             fi
 
-                            if [ -v "$onlylocal" ] && [ -z "$donotdelete" ]; then
+                            if [ -n "$onlylocal" ] && [ -z "$donotdelete" ]; then
                                 log "INFO" "Backup of $name has been marked as a local only. It is not transferred anywhere."
                             fi
                             
-                            if [ -v "$donotdelete" ]; then
+                            if [ -n "$donotdelete" ]; then
                                 log "INFO" "Backup of $name is not to be removed, it is intact locally."
                             fi
                         fi
@@ -565,7 +565,7 @@ if [ "$files_backup" -eq 1 ]; then
                         log "INFO" "Warning: some files were changed while creating archive $name.tar.gz."
                     fi
                     log "OK" "Backup of directory $dir created successfully."
-                    if [ "$ftp_enabled" -eq 1 ] && [ "$FTP_ERROR" == "false" ] && [ -v "$onlylocal" ]; then
+                    if [ "$ftp_enabled" -eq 1 ] && [ "$FTP_ERROR" == "false" ] && [ -z "$onlylocal" ]; then
                         "$LFTP" -u $ftp_user,$ftp_password -e "set ftp:ssl-allow off; set ftp:use-size false;cd /$ftp_remote_dir/$run_date/files;put $files_backup_dir/$name.tar.gz;quit" "$ftp_server"
                         if [ $? -ne 0 ]; then
                             log "ERROR" "Failed to send file $files_backup_dir/$name.tar.gz to ftp server"'!'
@@ -574,7 +574,7 @@ if [ "$files_backup" -eq 1 ]; then
                             log "OK" "Backup file $files_backup_dir/$name.tar.gz successfully sent to ftp server."
                         fi
                     fi
-                    if [ "$s3_enabled" -eq 1 ] && [ -v "$onlylocal" ]; then
+                    if [ "$s3_enabled" -eq 1 ] && [ -z "$onlylocal" ]; then
                         "$S3CMD" put "$files_backup_dir/$name.tar.gz" "$s3_path/$run_date/files/"
                         if [ "$?" -eq 0 ]; then
                             log "OK" "File $name.tar.gz sent to S3 successfully."
@@ -593,11 +593,11 @@ if [ "$files_backup" -eq 1 ]; then
                         fi
                     fi
 
-                    if [ -v "$onlylocal" ] && [ -z "$donotdelete" ]; then
+                    if [ -n "$onlylocal" ] && [ -z "$donotdelete" ]; then
                         log "INFO" "Backup of $name has been marked as a local only. It is not transferred anywhere."
                     fi
 
-                    if [ -v "$donotdelete" ]; then
+                    if [ -n "$donotdelete" ]; then
                         log "INFO" "Backup of $name is not to be removed, it is intact locally."
                     fi
                 fi
@@ -632,4 +632,3 @@ else
 fi
 
 cleanup
-
